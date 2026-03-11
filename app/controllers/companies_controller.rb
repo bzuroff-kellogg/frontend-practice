@@ -7,6 +7,7 @@ class CompaniesController < ApplicationController
   def show
     @company = Company.find_by({ "id" => params["id"] })
     @contacts = Contact.where({ "company_id" => @company["id"] })
+    @activities = Activity.where({ "contact_id" => @contacts.map { |c| c["id"] } })
   end
 
   def new

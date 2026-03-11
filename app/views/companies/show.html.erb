@@ -1,30 +1,77 @@
-<h1><%= @company["name"] %></h1>
+<div class="container mt-4">
+  <h1 class="mb-4"><%= @company["name"] %></h1>
 
-<h2><%= @company["city"] %>, <%= @company["state"] %></h2>
+  <div class="row">
 
-<h3>Contacts</h3>
+    <!-- Left column: Contacts -->
+    <div class="col-md-6">
+      <h3>Contacts</h3>
 
-<ul>
-  <% for contact in @contacts %>
-    <li>
-      <a href="/contacts/<%= contact["id"] %>">
-        <%= contact["last_name"] %>, <%= contact["first_name"] %>
-      </a>
-    </li>
+      <% for contact in @contacts %>
+        <div class="d-flex align-items-center mb-3">
+          <div class="border me-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width:52px;height:52px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4z"/>
+            </svg>
+          </div>
+          <div>
+            <a href="/contacts/<%= contact["id"] %>">
+              <%= contact["first_name"] %> <%= contact["last_name"] %>
+            </a>
+          </div>
+        </div>
+      <% end %>
+
+      <p><a href="/contacts/new?company_id=<%= @company["id"] %>">+ New Contact</a></p>
+    </div>
+
+    <!-- Right column: Sales Activity -->
+    <div class="col-md-6">
+      <h3>Sales Activity</h3>
+
+      <% for activity in @activities %>
+        <% activity_contact = Contact.find_by({ "id" => activity["contact_id"] }) %>
+        <% activity_user = User.find_by({ "id" => activity["user_id"] }) %>
+        <p>
+          <strong>
+            <%= activity["activity_type"] %> between
+            <%= activity_contact ? "#{activity_contact["first_name"]} #{activity_contact["last_name"]}" : "Unknown" %>
+            and
+            <%= activity_user ? activity_user["first_name"] : "Unknown" %>
+            on <%= activity["created_at"].strftime("%A, %B %-d") %>:
+          </strong><br>
+          <em><%= activity["note"] %></em>
+        </p>
+      <% end %>
+
+      <h4 class="mt-4">Log a new sales activity</h4>
+      <form action="/activities" method="post">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="d-flex align-items-center mb-3">
+          <label class="me-2">With</label>
+          <select name="contact_id" class="form-select w-auto">
+            <% for contact in @contacts %>
+              <option value="<%= contact["id"] %>"><%= contact["first_name"] %> <%= contact["last_name"] %></option>
+            <% end %>
+          </select>
+        </div>
+        <textarea class="form-control" name="note" rows="4"></textarea>
+        <button type="submit" class="btn btn-primary mt-2">Save</button>
+      </form>
+    </div>
+
+  </div>
+
+  <div class="mt-4">
+    <a href="/companies">Back to All Companies</a>
+  </div>
+
+  <% if User.find_by({ "id" => session["user_id"] }) != nil %>
+    <p><a href="/companies/<%= @company["id"] %>/edit">Edit Company</a></p>
+    <form action="/companies/<%= @company["id"] %>" method="post">
+      <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+      <input type="hidden" name="_method" value="delete">
+      <button class="btn btn-danger btn-sm">Delete Company</button>
+    </form>
   <% end %>
-</ul>
-
-<p>
-  <a href="/contacts/new?company_id=<%= @company["id"] %>">New Contact</a>
-</p>
-
-<p><a href="/companies">Back to All Companies</a></p>
-
-<% User.find_by({ "id" => session["user_id"] }) != nil %>
-  <p><a href="/companies/<%= @company["id"] %>/edit">Edit Company</a></p>
-
-  <form action="/companies/<%= @company["id"] %>" method="post">
-    <input type="hidden" name="_method" value="delete">
-    <button>Delete Company</button>
-  </form>
-<% end %>
+</div>
